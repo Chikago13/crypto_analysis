@@ -11,6 +11,7 @@ from aiogram.types import Message
 from aiogram.filters.command import Command
 from tradingview_ta import TA_Handler, Interval, Recommendation
 import ccxt
+import matplotlib.pyplot as plt
 
 API_TOKEN ='6531929248:AAFTh9wDMnmqpkYpvl-h5ttT-OgGHNM4VkA'
 
@@ -49,7 +50,6 @@ def get_current_price(symbol):
         return None
 
 
-
 @dp.message()
 async def get_crypto_price(message: types.Message):
     try:
@@ -67,9 +67,16 @@ async def get_crypto_price(message: types.Message):
             # await message.answer(result)
             analysis = result.get('RECOMMENDATION', Recommendation.error)
             await message.answer(RECOMMENDATIONS.get(analysis))
-    except:
-        await message.answer('Некорректный ввод')        
 
+            historical_data = exchange.fetch_ohlcv(symbol, timeframe='1d', limit=24)
+            timestamps = [data[0] for data in historical_data]
+            prices = [data[4] for data in historical_data]
+
+            plt.plot(timestamps, prices)
+            plt.xlabel('Время')
+            plt.ylabel('Цена')
+            plt.title(f'График цен для {symbol} за последние 24 часа')
+            plt.show()
 
 # # Запуск процесса поллинга новых апдейтов
 async def main():
